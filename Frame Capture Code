@@ -1,0 +1,32 @@
+// Camera Initialization via I2C
+void ov7670_Init(void) {
+    ov7670_Write_Reg(0x12, 0x80); // Reset
+    HAL_Delay(30);
+    for (int i = 0; ov7670_reg[i][0] != 0xFF; i++) {
+        ov7670_Write_Reg(ov7670_reg[i][0], ov7670_reg[i][1]);
+        HAL_Delay(1);
+    }
+}
+
+// Capturing Images with DCMI and DMA using Frame Buffer Setup
+HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t*)framebuf, 320*240/2);
+
+// Frame Capture Logic
+int main(void) {
+    HAL_Init();
+    SystemClock_Config();
+    MX_GPIO_Init();
+    MX_I2C2_Init();
+    MX_DCMI_Init();
+    MX_DMA_Init();
+    MX_USART2_UART_Init();
+
+    ov7670_Init();
+
+    while (1) {
+        HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t*)framebuf, 320*240/2);
+        // Wait for frame capture completion (polling or interrupt)
+        // Transmit framebuf to laptop via UART/USB
+        HAL_Delay(2000); // Capture every 2 seconds
+    }
+}
